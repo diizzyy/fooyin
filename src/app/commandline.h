@@ -22,6 +22,10 @@
 #include <QList>
 #include <QUrl>
 
+#ifdef Q_OS_WIN32
+#include <windows.h>
+#endif
+
 class CommandLine
 {
 public:
@@ -38,7 +42,11 @@ public:
 
 private:
     int m_argc;
+#ifdef Q_OS_WIN32
+    LPWSTR* m_argv;
+#else
     char** m_argv;
+#endif
     QList<QUrl> m_files;
     bool m_skipSingle;
 };

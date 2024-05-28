@@ -126,16 +126,18 @@ create_fooyin_library(
 
 target_link_libraries(
     fooyin_core
-    PRIVATE fooyin_version fooyin_config
+    PRIVATE fooyin_version 
+            fooyin_config
+            ${FFMPEG_LIBRARIES}
     PUBLIC Qt6::Core
            Qt6::Widgets
            Qt6::Sql
            Qt6::Concurrent
            Taglib::Taglib
            Fooyin::Utils
-           ${FFMPEG_LIBRARIES}
 )
 
 target_include_directories(
-    fooyin_core PRIVATE ${FFMPEG_INCLUDE_DIRS}
+    fooyin_core
+    PRIVATE ${FFMPEG_INCLUDE_DIRS}
 )

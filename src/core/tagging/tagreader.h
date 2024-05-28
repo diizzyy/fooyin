@@ -23,7 +23,8 @@
 
 #include <core/track.h>
 
-#include <taglib/audioproperties.h>
+// TagLib
+#include <audioproperties.h>
 
 #include <QString>
 

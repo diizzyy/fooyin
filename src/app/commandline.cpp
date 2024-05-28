@@ -28,18 +28,45 @@
 #include <getopt.h>
 #include <iostream>
 
+namespace {
+#ifdef Q_OS_WIN32
+QString decodeName(wchar_t* opt)
+{
+    return QString::fromWCharArray(opt);
+}
+#else
+QString decodeName(char* opt)
+{
+    return QFile::decodeName(opt);
+}
+#endif
+}
+
 CommandLine::CommandLine(int argc, char** argv)
     : m_argc{argc}
-    , m_argv{argv}
+#ifdef Q_OS_WIN32
+    , m_argv{CommandLineToArgvW(GetCommandLineW(), &argc)}
+#else
+   , m_argv{argv}
+#endif
     , m_skipSingle{false}
 { }
 
 bool CommandLine::parse()
 {
-    static constexpr option cmdOptions[] = {{"help", no_argument, nullptr, 'h'},
-                                            {"version", no_argument, nullptr, 'v'},
-                                            {"skip", no_argument, nullptr, 's'},
-                                            {nullptr, 0, nullptr, 0}};
+    static constexpr option cmdOptions[] = {
+#ifdef Q_OS_WIN32
+        {L"help", no_argument, nullptr, 'h'},
+        {L"version", no_argument, nullptr, 'v'},
+        {L"skip", no_argument, nullptr, 's'},
+        {nullptr, 0, nullptr, 0
+#else
+        {"help", no_argument, nullptr, 'h'},
+        {"version", no_argument, nullptr, 'v'},
+        {"skip", no_argument, nullptr, 's'},
+        {nullptr, 0, nullptr, 0
+#endif
+    }};
 
     static const auto help = QStringLiteral("%1: fooyin [%2] [%3]\n"
                                             "\n"
@@ -51,7 +78,11 @@ bool CommandLine::parse()
                                             "  urls            %8\n");
 
     for(;;) {
+#ifdef Q_OS_WIN32
+        const int c = getopt_long(m_argc, m_argv, L"hvs", cmdOptions, nullptr);
+#else
         const int c = getopt_long(m_argc, m_argv, "hvs", cmdOptions, nullptr);
+#endif
         if(c == -1) {
             break;
         }
@@ -80,7 +111,8 @@ bool CommandLine::parse()
     }
 
     for(int i{optind}; i < m_argc; ++i) {
-        const QFileInfo fileinfo{QFile::decodeName(m_argv[i])};
+        const QString file = decodeName(m_argv[i]);
+        QFileInfo fileinfo{file};
         if(fileinfo.exists()) {
             m_files.append(QUrl::fromLocalFile(fileinfo.canonicalFilePath()));
         }

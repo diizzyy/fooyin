@@ -62,31 +62,33 @@ fooyin_option(BUILD_ASAN "Enable AddressSanitizer" OFF)
 fooyin_option(INSTALL_FHS "Install in Linux distros /usr hierarchy" ON)
 fooyin_option(INSTALL_HEADERS "Install public development headers" OFF)
 
-list(
-    APPEND
-    FOOYIN_COMPILE_OPTIONS
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wunused
-    -Wshadow
-    -Wundef
-    -Wuninitialized
-    -Wredundant-decls
-    -Wcast-align
-    -Winit-self
-    -Wmissing-include-dirs
-    -Wstrict-overflow=2
-    -Wunused-parameter
-    -Wdisabled-optimization
-    -Woverloaded-virtual
-    -Wold-style-cast
-)
-if(BUILD_WERROR)
-    list(APPEND FOOYIN_COMPILE_OPTIONS -Werror)
-endif()
-if(BUILD_ASAN)
-    list(APPEND FOOYIN_COMPILE_OPTIONS -fsanitize=address,undefined)
+if(UNIX)
+    list(
+        APPEND
+        FOOYIN_COMPILE_OPTIONS
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wunused
+        -Wshadow
+        -Wundef
+        -Wuninitialized
+        -Wredundant-decls
+        -Wcast-align
+        -Winit-self
+        -Wmissing-include-dirs
+        -Wstrict-overflow=2
+        -Wunused-parameter
+        -Wdisabled-optimization
+        -Woverloaded-virtual
+        -Wold-style-cast
+    )
+    if(BUILD_WERROR)
+        list(APPEND FOOYIN_COMPILE_OPTIONS -Werror)
+    endif()
+    if(BUILD_ASAN)
+        list(APPEND FOOYIN_COMPILE_OPTIONS -fsanitize=address,undefined)
+    endif()
 endif()
 
 list(
@@ -129,6 +131,17 @@ find_package(
                AVFORMAT
                AVUTIL
 )
+
+if(MSVC)
+	find_path(GETOPT_INCLUDE_DIR getopt.h)
+	if (NOT GETOPT_INCLUDE_DIR)
+		message(FATAL_ERROR "Cannot find getopt.h")
+	endif()
+	find_library(GETOPT_LIBRARY getopt)
+	if (NOT GETOPT_LIBRARY)
+		message(FATAL_ERROR "Cannot find getopt library")
+	endif()
+endif()
 
 include(3rdparty/3rdparty.cmake)
 
@@ -331,6 +344,11 @@ target_link_libraries(
             fooyin_lib
             Fooyin::CorePrivate
 )
+
+if(MSVC)
+	target_include_directories(fooyin PRIVATE ${GETOPT_INCLUDE_DIR})
+	target_link_libraries(fooyin PRIVATE ${GETOPT_LIBRARY})
+endif()
 
 # ---- Fooyin install ----
 
